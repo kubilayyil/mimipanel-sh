@@ -130,7 +130,15 @@ EOF
 
     log "Setting up Frontend UI..."
     cd "$INSTALL_DIR/frontend"
-    # Even with pre-built files, we might need production dependencies
+    
+    # Get server IP for frontend config
+    IP=$(curl -s ifconfig.me)
+    
+    # Create environment file with API URL
+    log "Configuring Frontend environment..."
+    echo "NEXT_PUBLIC_API_URL=http://$IP" > .env.local
+    
+    # Install production dependencies
     npm install --quiet --only=production
     
     log "Starting Frontend with PM2..."
