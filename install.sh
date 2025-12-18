@@ -86,6 +86,7 @@ install_runtimes() {
 
 # Download and Setup Package
 setup_package() {
+    log "🚀 Setting up KralPanel via Pre-built Package..."
     log "Downloading KralPanel package..."
     # BURAYA KENDİ İNDİRME LİNKİNİ KOYACAKSIN KRAL
     PACKAGE_URL="https://github.com/kubilayyil/mimipanel-sh/raw/main/kralpanel.tar.gz"
