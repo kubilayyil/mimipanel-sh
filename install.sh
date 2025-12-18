@@ -103,11 +103,10 @@ setup_package() {
     rm /tmp/kralpanel.tar.gz
 }
 
-# Build and Start Services
+# Start Services
 setup_services() {
-    log "Building Backend API..."
-    cd "$INSTALL_DIR/backend"
-    /usr/local/go/bin/go build -o kralpanel-api ./cmd/api
+    log "Configuring Backend API..."
+    chmod +x "$INSTALL_DIR/backend/kralpanel-api"
     
     log "Configuring Systemd..."
     cat > /etc/systemd/system/kralpanel-api.service << EOF
@@ -120,6 +119,7 @@ ExecStart=$INSTALL_DIR/backend/kralpanel-api
 WorkingDirectory=$INSTALL_DIR/backend
 Restart=always
 User=root
+Environment=PORT=8080
 
 [Install]
 WantedBy=multi-user.target
@@ -128,10 +128,13 @@ EOF
     systemctl enable -q kralpanel-api
     systemctl start kralpanel-api
 
-    log "Building Frontend UI..."
+    log "Setting up Frontend UI..."
     cd "$INSTALL_DIR/frontend"
-    npm install --quiet
-    npm run build --quiet
+    # Even with pre-built files, we might need production dependencies
+    npm install --quiet --only=production
+    
+    log "Starting Frontend with PM2..."
+    pm2 delete kralpanel-ui 2>/dev/null || true
     pm2 start npm --name "kralpanel-ui" -- start
     pm2 save --silent
 
