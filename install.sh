@@ -99,7 +99,7 @@ setup_package() {
     fi
 
     log "Extracting package contents..."
-    tar -xzf /tmp/kralpanel.tar.gz -C $INSTALL_DIR
+    tar -xzf /tmp/kralpanel.tar.gz -C $INSTALL_DIR 2>/dev/null
     rm /tmp/kralpanel.tar.gz
 }
 
