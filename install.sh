@@ -108,6 +108,9 @@ setup_services() {
     log "Configuring Backend API..."
     chmod +x "$INSTALL_DIR/backend/kralpanel-api"
     
+    # Ensure backend directory is writable for SQLite database
+    chmod 755 "$INSTALL_DIR/backend"
+    
     log "Configuring Systemd..."
     cat > /etc/systemd/system/kralpanel-api.service << EOF
 [Unit]
