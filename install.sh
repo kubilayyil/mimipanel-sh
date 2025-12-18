@@ -89,21 +89,24 @@ clone_project() {
     log "Setting up source code..."
     rm -rf $INSTALL_DIR
     
-    # Check if we need token
-    # We try a public clone first, if it fails, ask for token
     log "Cloning from $REPO_URL..."
     
-    echo -e "${YELLOW}Kral! Repo gizliyse GitHub Personal Access Token (PAT) gerekecek.${NC}"
-    read -p "GitHub Token (ghp_xxx): " GH_TOKEN
+    echo -e "${YELLOW}Kral! Repo gizli olduğu için GitHub Personal Access Token (PAT) gerekiyor.${NC}"
+    # Read from /dev/tty to support piped execution (curl | bash)
+    printf "GitHub Token (ghp_xxx): "
+    read -r GH_TOKEN < /dev/tty
+    echo ""
     
     if [ -z "$GH_TOKEN" ]; then
         die "Token cannot be empty for private repository."
     fi
 
-    AUTH_URL="https://${GH_TOKEN}@${REPO_URL}"
+    # Use x-access-token for more reliable GitHub auth
+    AUTH_URL="https://x-access-token:${GH_TOKEN}@${REPO_URL}"
     
-    if ! git clone -q $AUTH_URL $INSTALL_DIR; then
-        die "Failed to clone repository. Check your Token and URL."
+    log "Attempting to clone private repository..."
+    if ! git clone -q "$AUTH_URL" "$INSTALL_DIR"; then
+        die "Failed to clone repository. Check if your Token (PAT) has 'repo' permissions and the URL is correct."
     fi
 }
 
