@@ -84,30 +84,22 @@ install_runtimes() {
     npm install -g pm2 -g > /dev/null
 }
 
-# Clone Project (Handles Private Repo)
-clone_project() {
-    log "Setting up source code..."
+# Download and Setup Package
+setup_package() {
+    log "Downloading KralPanel package..."
+    # BURAYA KENDİ İNDİRME LİNKİNİ KOYACAKSIN KRAL
+    PACKAGE_URL="https://github.com/kubilayyil/mimipanel-sh/raw/main/kralpanel.tar.gz"
+    
     rm -rf $INSTALL_DIR
+    mkdir -p $INSTALL_DIR
     
-    log "Cloning from $REPO_URL..."
-    
-    echo -e "${YELLOW}Kral! Repo gizli olduğu için GitHub Personal Access Token (PAT) gerekiyor.${NC}"
-    # Read from /dev/tty to support piped execution (curl | bash)
-    printf "GitHub Token (ghp_xxx): "
-    read -r GH_TOKEN < /dev/tty
-    echo ""
-    
-    if [ -z "$GH_TOKEN" ]; then
-        die "Token cannot be empty for private repository."
+    if ! curl -sSL "$PACKAGE_URL" -o /tmp/kralpanel.tar.gz; then
+        die "Failed to download package from $PACKAGE_URL"
     fi
 
-    # Use x-access-token for more reliable GitHub auth
-    AUTH_URL="https://x-access-token:${GH_TOKEN}@${REPO_URL}"
-    
-    log "Attempting to clone private repository..."
-    if ! git clone -q "$AUTH_URL" "$INSTALL_DIR"; then
-        die "Failed to clone repository. Check if your Token (PAT) has 'repo' permissions and the URL is correct."
-    fi
+    log "Extracting package contents..."
+    tar -xzf /tmp/kralpanel.tar.gz -C $INSTALL_DIR
+    rm /tmp/kralpanel.tar.gz
 }
 
 # Build and Start Services
@@ -170,7 +162,7 @@ check_root
 get_os_info
 install_dependencies
 install_runtimes
-clone_project
+setup_package
 setup_services
 
 echo -e "\n${GREEN}════════════════════════════════════════════════════${NC}"
