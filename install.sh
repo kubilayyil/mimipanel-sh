@@ -59,9 +59,58 @@ get_os_info() {
 install_dependencies() {
     log "Updating system and installing base components..."
     export DEBIAN_FRONTEND=noninteractive
-    apt-get update -qq && apt-get install -qq -y \
+    apt-get update -qq
+    
+    # Base packages
+    apt-get install -qq -y \
         curl wget git build-essential software-properties-common \
-        ufw fail2ban nginx unzip > /dev/null
+        ufw fail2ban nginx unzip zip acl > /dev/null
+    
+    # Add PHP repository
+    log "Adding PHP repository..."
+    add-apt-repository -y ppa:ondrej/php > /dev/null 2>&1
+    apt-get update -qq
+    
+    # Install PHP versions (7.4, 8.0, 8.1, 8.2, 8.3)
+    log "Installing PHP versions..."
+    for PHP_VER in 7.4 8.0 8.1 8.2 8.3; do
+        apt-get install -qq -y \
+            php${PHP_VER}-fpm php${PHP_VER}-cli php${PHP_VER}-common \
+            php${PHP_VER}-mysql php${PHP_VER}-pgsql php${PHP_VER}-sqlite3 \
+            php${PHP_VER}-curl php${PHP_VER}-gd php${PHP_VER}-mbstring \
+            php${PHP_VER}-xml php${PHP_VER}-zip php${PHP_VER}-bcmath \
+            php${PHP_VER}-intl php${PHP_VER}-soap php${PHP_VER}-imap \
+            php${PHP_VER}-redis php${PHP_VER}-imagick > /dev/null 2>&1
+    done
+    
+    # Install MariaDB
+    log "Installing MariaDB..."
+    apt-get install -qq -y mariadb-server mariadb-client > /dev/null
+    systemctl enable mariadb
+    systemctl start mariadb
+    
+    # Install Mail Server (Postfix + Dovecot)
+    log "Installing Mail Server..."
+    debconf-set-selections <<< "postfix postfix/mailname string $(hostname -f)"
+    debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
+    apt-get install -qq -y postfix dovecot-core dovecot-imapd dovecot-pop3d > /dev/null
+    systemctl enable postfix dovecot
+    systemctl start postfix dovecot
+    
+    # Install Certbot for SSL
+    log "Installing Certbot..."
+    apt-get install -qq -y certbot python3-certbot-nginx > /dev/null
+    
+    # Install additional tools
+    log "Installing additional tools..."
+    apt-get install -qq -y \
+        redis-server memcached \
+        pure-ftpd \
+        supervisor > /dev/null 2>&1
+    
+    # Enable services
+    systemctl enable nginx redis-server > /dev/null 2>&1
+    systemctl start nginx redis-server > /dev/null 2>&1
 }
 
 # Install Runtimes (Go & Node)
