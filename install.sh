@@ -1,14 +1,14 @@
 #!/bin/sh
 #====================================================================
-# KralPanel - Professional One-Click Installer
+# Mimipanel - Professional One-Click Installer
 # (C) 2025 Kubilay Yildirim. All rights reserved.
 #====================================================================
 
 set -efu
 
 # --- Config ---
-KRALPANEL_VERSION="1.0.0"
-INSTALL_DIR="/opt/kralpanel"
+MIMIPANEL_VERSION="1.0.0"
+INSTALL_DIR="/opt/mimipanel"
 REPO_URL="github.com/kubilayyil/mimipanel.git" # Private Repo Path
 # --- Colors ---
 RED='\033[0;31m'
@@ -33,7 +33,7 @@ log() {
 # Check if running as root
 check_root() {
     if [ "$(id -u)" -ne 0 ]; then
-        die "You must have superuser privileges to install KralPanel."
+        die "You must have superuser privileges to install Mimipanel."
     fi
 }
 
@@ -49,7 +49,7 @@ get_os_info() {
 
     # Only support Ubuntu for now
     if [ "$OS_NAME" != "ubuntu" ]; then
-        die "KralPanel currently only supports Ubuntu. Detected: $OS_NAME"
+        die "Mimipanel currently only supports Ubuntu. Detected: $OS_NAME"
     fi
 
     log "Detected OS: $NAME $VERSION"
@@ -86,39 +86,39 @@ install_runtimes() {
 
 # Download and Setup Package
 setup_package() {
-    log "🚀 Setting up KralPanel via Pre-built Package..."
-    log "Downloading KralPanel package..."
+    log "🚀 Setting up Mimipanel via Pre-built Package..."
+    log "Downloading Mimipanel package..."
     # BURAYA KENDİ İNDİRME LİNKİNİ KOYACAKSIN KRAL
-    PACKAGE_URL="https://github.com/kubilayyil/mimipanel-sh/raw/main/kralpanel.tar.gz"
+    PACKAGE_URL="https://github.com/kubilayyil/mimipanel-sh/raw/main/mimipanel.tar.gz"
     
     rm -rf $INSTALL_DIR
     mkdir -p $INSTALL_DIR
     
-    if ! curl -sSL "$PACKAGE_URL" -o /tmp/kralpanel.tar.gz; then
+    if ! curl -sSL "$PACKAGE_URL" -o /tmp/mimipanel.tar.gz; then
         die "Failed to download package from $PACKAGE_URL"
     fi
 
     log "Extracting package contents..."
-    tar -xzf /tmp/kralpanel.tar.gz -C $INSTALL_DIR 2>/dev/null
-    rm /tmp/kralpanel.tar.gz
+    tar -xzf /tmp/mimipanel.tar.gz -C $INSTALL_DIR 2>/dev/null
+    rm /tmp/mimipanel.tar.gz
 }
 
 # Start Services
 setup_services() {
     log "Configuring Backend API..."
-    chmod +x "$INSTALL_DIR/backend/kralpanel-api"
+    chmod +x "$INSTALL_DIR/backend/mimipanel-api"
     
     # Ensure backend directory is writable for SQLite database
     chmod 755 "$INSTALL_DIR/backend"
     
     log "Configuring Systemd..."
-    cat > /etc/systemd/system/kralpanel-api.service << EOF
+    cat > /etc/systemd/system/mimipanel-api.service << EOF
 [Unit]
-Description=KralPanel API
+Description=Mimipanel API
 After=network.target
 
 [Service]
-ExecStart=$INSTALL_DIR/backend/kralpanel-api
+ExecStart=$INSTALL_DIR/backend/mimipanel-api
 WorkingDirectory=$INSTALL_DIR/backend
 Restart=always
 User=root
@@ -128,8 +128,8 @@ Environment=PORT=8080
 WantedBy=multi-user.target
 EOF
     systemctl daemon-reload
-    systemctl enable -q kralpanel-api
-    systemctl start kralpanel-api
+    systemctl enable -q mimipanel-api
+    systemctl start mimipanel-api
 
     log "Setting up Frontend UI..."
     cd "$INSTALL_DIR/frontend"
@@ -145,13 +145,13 @@ EOF
     npm install --quiet --only=production
     
     log "Starting Frontend with PM2..."
-    pm2 delete kralpanel-ui 2>/dev/null || true
-    pm2 start npm --name "kralpanel-ui" -- start
+    pm2 delete mimipanel-ui 2>/dev/null || true
+    pm2 start npm --name "mimipanel-ui" -- start
     pm2 save --silent
 
     log "Configuring Nginx..."
     IP=$(curl -s ifconfig.me)
-    cat > /etc/nginx/sites-available/kralpanel << EOF
+    cat > /etc/nginx/sites-available/mimipanel << EOF
 server {
     listen 80;
     server_name $IP;
@@ -159,7 +159,7 @@ server {
     location /api { proxy_pass http://localhost:8080; }
 }
 EOF
-    ln -sf /etc/nginx/sites-available/kralpanel /etc/nginx/sites-enabled/
+    ln -sf /etc/nginx/sites-available/mimipanel /etc/nginx/sites-enabled/
     rm -f /etc/nginx/sites-enabled/default
     systemctl restart nginx
 }
@@ -168,8 +168,8 @@ EOF
 
 echo -e "${CYAN}"
 echo "╔════════════════════════════════════════════════════╗"
-echo "║          KRALPANEL One-Click Installer             ║"
-echo "║             v${KRALPANEL_VERSION} - Linux Center              ║"
+echo "║          MIMIPANEL One-Click Installer             ║"
+echo "║             v${MIMIPANEL_VERSION} - Linux Center              ║"
 echo "╚════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
